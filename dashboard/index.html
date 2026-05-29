@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EchoMapScout | Gas Sensing Robot Dashboard</title>
+    <style>
+      :root {
+        --bg: #eef3ef;
+        --surface: rgba(255, 255, 255, 0.78);
+        --surface-strong: #ffffff;
+        --ink: #173126;
+        --muted: #5e7467;
+        --line: rgba(23, 49, 38, 0.12);
+        --brand: #1f8a5b;
+        --brand-deep: #11623d;
+        --accent: #f2b94b;
+        --danger: #d64545;
+        --shadow: 0 24px 60px rgba(17, 48, 34, 0.12);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(
+            circle at top left,
+            rgba(31, 138, 91, 0.12),
+            transparent 32%
+          ),
+          radial-gradient(
+            circle at top right,
+            rgba(242, 185, 75, 0.18),
+            transparent 24%
+          ),
+          linear-gradient(180deg, #f8fbf7 0%, #edf4ef 52%, #e4eee7 100%);
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(
+            rgba(255, 255, 255, 0.42) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.42) 1px, transparent 1px);
+        background-size: 42px 42px;
+        pointer-events: none;
+        opacity: 0.32;
+      }
+
+      .page {
+        position: relative;
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        animation: fadeUp 0.65s ease;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 24px;
+        background: linear-gradient(
+          135deg,
+          var(--brand) 0%,
+          var(--brand-deep) 100%
+        );
+        box-shadow: 0 14px 34px rgba(31, 138, 91, 0.28);
+      }
+
+      .brand h1,
+      .hero-copy h2,
+      .panel h3,
+      .metric .value,
+      .gas-value,
+      .control-grid button {
+        margin: 0;
+      }
+
+      .brand h1 {
+        font-size: 1.45rem;
+        letter-spacing: 0.02em;
+      }
+
+      .brand p,
+      .hero-copy p,
+      .panel p,
+      .status-chip,
+      .video-meta,
+      .stat-label,
+      .gas-meta,
+      .footer-note {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .live-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--brand);
+        box-shadow: 0 0 0 8px rgba(31, 138, 91, 0.12);
+        animation: pulse 1.8s infinite;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      .hero-card,
+      .panel,
+      .metric,
+      .gas-card {
+        background: var(--surface);
+        border: 1px solid rgba(255, 255, 255, 0.52);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        border-radius: var(--radius-xl);
+        padding: 30px;
+        display: grid;
+        gap: 22px;
+        animation: fadeUp 0.8s ease;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(31, 138, 91, 0.1);
+        color: var(--brand-deep);
+        font-size: 0.84rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .hero-copy h2 {
+        font-size: clamp(2.25rem, 4vw, 4.2rem);
+        line-height: 0.96;
+        max-width: 10ch;
+        margin-bottom: 14px;
+      }
+
+      .hero-copy p {
+        max-width: 58ch;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .metric {
+        padding: 18px;
+        border-radius: var(--radius-lg);
+      }
+
+      .metric .value {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+        gap: 24px;
+      }
+
+      .panel,
+      .gas-card {
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        animation: fadeUp 0.9s ease;
+      }
+
+      .panel-header,
+      .gas-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .panel-header h3,
+      .gas-header h3 {
+        font-size: 1.28rem;
+        margin-bottom: 6px;
+      }
+
+      .status-chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(23, 49, 38, 0.06);
+        font-size: 0.84rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .video-shell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        background: linear-gradient(
+            135deg,
+            rgba(31, 138, 91, 0.92),
+            rgba(17, 98, 61, 0.86)
+          ),
+          #173126;
+        min-height: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: grid;
+        place-items: center;
+      }
+
+      .video-shell img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .video-placeholder {
+        text-align: center;
+        padding: 36px;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 420px;
+      }
+
+      .video-placeholder strong {
+        display: block;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+
+      .video-meta {
+        margin-top: 14px;
+        font-size: 0.95rem;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 24px;
+      }
+
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(72px, 1fr));
+        gap: 12px;
+        max-width: 320px;
+        margin: 20px auto 8px;
+      }
+
+      .control-grid .spacer {
+        visibility: hidden;
+      }
+
+      .control-grid button {
+        min-height: 72px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #eaf3ee 100%);
+        color: var(--ink);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          0 10px 24px rgba(23, 49, 38, 0.1);
+        transition: transform 0.18s ease, box-shadow 0.18s ease,
+          background 0.18s ease;
+      }
+
+      .control-grid button:hover,
+      .control-grid button:focus-visible {
+        transform: translateY(-2px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 16px 30px rgba(23, 49, 38, 0.14);
+        outline: none;
+      }
+
+      .control-grid button:active,
+      .control-grid button.active {
+        transform: translateY(1px);
+        background: linear-gradient(180deg, #dff0e6 0%, #cee8d8 100%);
+      }
+
+      .control-grid button[data-direction="forward"] {
+        color: var(--brand-deep);
+      }
+
+      .control-grid button[data-direction="backward"] {
+        color: #8a5a15;
+      }
+
+      .control-grid button[data-direction="left"],
+      .control-grid button[data-direction="right"] {
+        color: #22445f;
+      }
+
+      .blynk-note {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(31, 138, 91, 0.08);
+        border: 1px solid rgba(31, 138, 91, 0.14);
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+
+      .gas-card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.82) 0%,
+          rgba(252, 248, 238, 0.92) 100%
+        );
+      }
+
+      .gas-meter {
+        display: grid;
+        gap: 18px;
+      }
+
+      .gas-number-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .gas-value {
+        font-size: clamp(3rem, 8vw, 4.6rem);
+        line-height: 0.9;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+      }
+
+      .gas-value.danger {
+        color: var(--danger);
+      }
+
+      .gas-bar {
+        height: 14px;
+        width: 100%;
+        border-radius: 999px;
+        background: rgba(23, 49, 38, 0.08);
+        overflow: hidden;
+      }
+
+      .gas-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(
+          90deg,
+          var(--brand) 0%,
+          var(--accent) 65%,
+          var(--danger) 100%
+        );
+        transition: width 0.35s ease;
+      }
+
+      .reading-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .reading-box {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(23, 49, 38, 0.08);
+      }
+
+      .reading-box strong {
+        display: block;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+      }
+
+      .footer-note {
+        margin-top: 18px;
+        font-size: 0.92rem;
+        line-height: 1.6;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.15);
+          opacity: 0.78;
+        }
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(22px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .hero,
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-copy h2 {
+          max-width: 14ch;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding-inline: 14px;
+        }
+
+        .topbar,
+        .panel-header,
+        .gas-header,
+        .gas-number-row {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .hero-card,
+        .panel,
+        .gas-card {
+          padding: 20px;
+        }
+
+        .hero-stats,
+        .reading-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .video-shell {
+          min-height: 260px;
+        }
+
+        .control-grid {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">E</div>
+          <div>
+            <h1>EchoMapScout</h1>
+            <p>Autonomous gas sensing and live remote inspection dashboard</p>
+          </div>
+        </div>
+        <div class="live-pill">
+          <span class="dot"></span>
+          <span id="systemStatus">Monitoring online</span>
+        </div>
+      </header>
+
+      <section class="hero">
+        <article class="hero-card">
+          <div class="hero-copy">
+            <h2>EchoMapScout Dashboard</h2>
+          </div>
+        </article>
+
+        <article class="hero-card">
+          <div class="panel-header">
+            <div>
+              <h3>System Status</h3>
+            </div>
+          </div>
+          <div class="reading-strip">
+            <div class="reading-box">
+              <strong id="uptimeValue">00:00:00</strong>
+            </div>
+            <div class="reading-box">
+              <strong id="streamValue">Standby</strong>
+            </div>
+            <div class="reading-box">
+              <strong id="sensorValue">MQ Sensor</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Live Robot Video</h3>
+            </div>
+            <span class="status-chip" id="videoStatus"></span>
+          </div>
+
+          <div class="video-shell">
+            <img
+              id="videoFeed"
+              crossorigin="anonymous"
+              alt="EchoMapScout live video feed"
+              hidden
+            />
+            <div class="video-placeholder" id="videoPlaceholder">
+              <strong>Live stream placeholder</strong>
+              Add your robot camera URL in the script section to display
+              real-time video here.
+              <div class="video-meta" id="videoSourceLabel">
+                Current source: not connected
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="side-stack">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Movement Control</h3>
+              </div>
+              <span class="status-chip">4-way control</span>
+            </div>
+
+            <div class="control-grid">
+              <div class="spacer"></div>
+              <button onclick="sendCommand('forward')">Forward</button>
+              <div class="spacer"></div>
+
+              <button onclick="sendCommand('left')">Left</button>
+              <button onclick="sendCommand('stop')">STOP</button>
+              <button onclick="sendCommand('right')">Right</button>
+
+              <div class="spacer"></div>
+              <button onclick="sendCommand('backward')">Backward</button>
+              <div class="spacer"></div>
+            </div>
+          </section>
+
+          <section class="gas-card">
+            <div class="gas-header">
+              <div>
+                <h3>Live Gas Detection Count</h3>
+                <p>Current reading from the onboard gas sensor</p>
+              </div>
+              <span class="status-chip" id="gasState">Safe range</span>
+            </div>
+
+            <div class="gas-meter">
+              <div class="gas-number-row">
+                <div>
+                  <div class="gas-value" id="gasCount">0</div>
+                  <p class="gas-meta" id="gasMeta">
+                    Waiting for live sensor data
+                  </p>
+                </div>
+              </div>
+
+              <div class="gas-bar" aria-hidden="true">
+                <div class="gas-fill" id="gasFill"></div>
+              </div>
+
+              <div class="reading-strip">
+                <div class="reading-box">
+                  <strong id="minReading">0</strong>
+                  <span class="stat-label">Min</span>
+                </div>
+                <div class="reading-box">
+                  <strong id="avgReading">0</strong>
+                  <span class="stat-label">Average</span>
+                </div>
+                <div class="reading-box">
+                  <strong id="maxReading">0</strong>
+                  <span class="stat-label">Max</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const CONFIG = {
+        IP: "192.168.45.102",
+        cameraUrl: "http://192.168.45.159:81/stream",
+        sensorEndpoint: "http://192.168.45.102/gas",
+      };
+
+      const state = {
+        sessionStart: Date.now(),
+        readings: [],
+      };
+
+      const ui = {
+        gasCount: document.getElementById("gasCount"),
+        gasFill: document.getElementById("gasFill"),
+        gasMeta: document.getElementById("gasMeta"),
+        gasState: document.getElementById("gasState"),
+        uptimeValue: document.getElementById("uptimeValue"),
+        streamValue: document.getElementById("streamValue"),
+        videoFeed: document.getElementById("videoFeed"),
+        videoPlaceholder: document.getElementById("videoPlaceholder"),
+        minReading: document.getElementById("minReading"),
+        avgReading: document.getElementById("avgReading"),
+        maxReading: document.getElementById("maxReading"),
+      };
+
+      // uptime
+      setInterval(() => {
+        const s = Math.floor((Date.now() - state.sessionStart) / 1000);
+        ui.uptimeValue.textContent =
+          String(Math.floor(s / 3600)).padStart(2, "0") +
+          ":" +
+          String(Math.floor((s % 3600) / 60)).padStart(2, "0") +
+          ":" +
+          String(s % 60).padStart(2, "0");
+      }, 1000);
+
+      // video
+      function startVideo() {
+        const url = CONFIG.cameraUrl;
+
+        ui.videoFeed.hidden = false;
+        ui.videoPlaceholder.hidden = true;
+
+        // Force reload (prevents caching issues)
+        ui.videoFeed.src = url + "?t=" + new Date().getTime();
+
+        ui.streamValue.textContent = "Connecting...";
+
+        ui.videoFeed.onload = () => {
+          ui.streamValue.textContent = "Live";
+          document.getElementById("videoStatus").textContent = "Live";
+        };
+
+        ui.videoFeed.onerror = () => {
+          ui.streamValue.textContent = "Retrying...";
+          document.getElementById("videoStatus").textContent = "Error";
+
+          // retry after 2 sec
+          setTimeout(startVideo, 2000);
+        };
+      }
+
+      startVideo();
+
+      // command
+      async function sendCommand(direction) {
+        try {
+          await fetch(`http://${CONFIG.IP}/${direction}`);
+
+          if (direction !== "stop") {
+            setTimeout(() => {
+              fetch(`http://${CONFIG.IP}/stop`);
+            }, 300);
+          }
+        } catch (e) {
+          console.log("error");
+        }
+      }
+
+      // gas
+      function updateGas(val) {
+        val = Number(val) || 0;
+        state.readings.push(val);
+        if (state.readings.length > 20) state.readings.shift();
+
+        const min = Math.min(...state.readings);
+        const max = Math.max(...state.readings);
+        const avg = Math.round(
+          state.readings.reduce((a, b) => a + b, 0) / state.readings.length,
+        );
+
+        ui.gasCount.textContent = val;
+        ui.gasFill.style.width = (val / 4095) * 100 + "%";
+        ui.minReading.textContent = min;
+        ui.avgReading.textContent = avg;
+        ui.maxReading.textContent = max;
+      }
+
+      async function fetchGas() {
+        try {
+          const res = await fetch(CONFIG.sensorEndpoint);
+          const data = await res.json();
+
+          console.log("GAS DATA:", data);
+
+          if (data.gas && data.gas > 0) {
+            updateGas(data.gas);
+          }
+        } catch (err) {
+          console.log("ERROR:", err); // 👈 ADD THIS
+          ui.gasMeta.textContent = "Sensor error";
+        }
+      }
+
+      setInterval(fetchGas, 1500);
+    </script>
+  </body>
+</html> this is my ui code how can i just run this to look how my ui looks 
